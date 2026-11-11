@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+profil.json
+grille-*.json
+!data/grille-exemple.json
+!data/profil-exemple.json
+mon-profil.json

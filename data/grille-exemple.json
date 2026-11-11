@@ -1,0 +1,12 @@
+{
+  "date": "2026-11-11",
+  "source": "grilles relevées à la main (TF1 Pro, guides TV) — à remplacer par la source automatique",
+  "programmes": [
+    {"chaine": "TF1", "titre": "Esprits criminels : Evolution", "debut": "21:10", "duree_min": 110, "genre": "serie", "inedit": true, "note_presse": 7.5, "replay": true, "description": "Deux épisodes inédits de la saison 18."},
+    {"chaine": "M6", "titre": "La France a un incroyable talent", "debut": "21:10", "duree_min": 145, "genre": "divertissement", "inedit": true, "replay": true},
+    {"chaine": "W9", "titre": "Esprits criminels", "debut": "21:10", "duree_min": 45, "genre": "serie", "inedit": false},
+    {"chaine": "TMC", "titre": "Hunger Games", "debut": "21:25", "duree_min": 140, "genre": "film", "inedit": false, "note_presse": 7.0},
+    {"chaine": "RTS Un", "titre": "La vie rêvée des autres", "debut": "20:55", "duree_min": 100, "genre": "film", "inedit": true, "note_presse": 7.2, "replay": true},
+    {"chaine": "RTS Deux", "titre": "La Petite Vadrouille", "debut": "20:55", "duree_min": 100, "genre": "film", "inedit": false, "note_presse": 6.5, "replay": true}
+  ]
+}
