@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Boucle de retour : lit les réponses aux issues et ajuste le profil.
+"""Boucle de retour : lit la réponse aux issues et ajuste le profil.
 
 Ce que le script fait, et rien de plus :
 
-    1. il cherche les issues « Top 3 du soir » et les commentaires qui contiennent
-       une réponse : « 1 », « 2 », « 3 » ou « aucun » ;
-    2. il retrouve le genre des programmes concernés dans la grille du jour ;
-    3. il ajuste d'UN SEUL cran le poids du genre choisi (+0,2) ou, sur « aucun »,
-       le poids du genre proposé en premier (-0,2) ;
-    4. il réécrit data/profil.json et note ce qu'il a changé.
+    1. il retrouve la date à traiter (la plus récente grille enregistrée) ;
+    2. il lit les commentaires de l'issue « Top 3 du soir — AAAA-MM-JJ »
+       et garde ceux qui contiennent uniquement « 1 », « 2 », « 3 » ou « aucun » ;
+    3. il retrouve le genre du programme choisi ;
+    4. il ajuste d'UN SEUL cran le poids de ce genre (+0,2, ou -0,2 sur « aucun ») ;
+    5. il réécrit data/profil.json et note le changement dans data/apprentissage.json.
 
 Pourquoi un seul cran : apprendre sur une décision par soir, c'est très peu de
-signal. Des ajustements brutaux rendraient le classement instable — il bougerait
-sans raison visible d'un jour à l'autre. +0,2 par soir, jamais plus.
+signal. Des ajustements brutaux rendraient le classement instable.
+
+Le script ne doit JAMAIS faire échouer le workflow : s'il ne trouve rien, il le
+dit et rend la main avec le code 0.
 
 Usage :
     python3 scripts/boucle.py
-    python3 scripts/boucle.py --essai     (affiche sans rien écrire)
+    python3 scripts/boucle.py --jour 2026-11-11
+    python3 scripts/boucle.py --essai
 """
 
 from __future__ import annotations
@@ -33,9 +36,9 @@ RACINE = Path(__file__).resolve().parent.parent
 PROFIL = RACINE / "data" / "profil.json"
 JOURNAL = RACINE / "data" / "apprentissage.json"
 
-CRAN = 0.2          # l'amplitude d'un ajustement, en points de 0 à 10
+CRAN = 0.2                       # amplitude d'un ajustement, en points de 0 à 10
 BORNE_MIN, BORNE_MAX = 0.0, 10.0
-DEPOT = "Quatree12/top3-du-soir"
+REPONSES_VALIDES = {"1", "2", "3", "aucun"}
 
 
 def api(chemin: str) -> list | dict | None:
@@ -60,37 +63,72 @@ def api(chemin: str) -> list | dict | None:
         return None
 
 
-def reponses_du_jour(jour: str) -> list[dict]:
-    """Réponses trouvées dans les issues du soir."""
-    issues = api(f"/repos/{DEPOT}/issues?state=all&per_page=50")
+def dernier_jour_traite() -> str | None:
+    """La date la plus récente pour laquelle on a un top 3."""
+    dossier = RACINE / "top3"
+    if not dossier.exists():
+        return None
+    fichiers = sorted(dossier.glob("20??-??-??.md"))
+    return fichiers[-1].stem if fichiers else None
+
+
+def reponses_pour(jour: str) -> list[str]:
+    """Réponses valides trouvées dans l'issue du jour, dans l'ordre."""
+    depot = os.environ.get("GITHUB_REPOSITORY")      # « proprietaire/depot »
+    if not depot:
+        print("GITHUB_REPOSITORY absent : impossible de savoir quel dépôt interroger.",
+              file=sys.stderr)
+        return []
+
+    issues = api(f"/repos/{depot}/issues?state=all&per_page=100")
     if not issues:
         return []
 
+    titre_vise = f"Top 3 du soir — {jour}"
     trouvailles = []
     for issue in issues:
-        titre = issue.get("title", "")
-        if "Top 3 du soir" not in titre or jour.replace("-", "-") not in titre:
+        if issue.get("title") != titre_vise:
             continue
-        commentaires = api(f"/repos/{DEPOT}/issues/{issue['number']}/comments") or []
+        commentaires = api(f"/repos/{depot}/issues/{issue['number']}/comments") or []
         for commentaire in commentaires:
             texte = (commentaire.get("body") or "").strip().lower()
-            if texte in {"1", "2", "3", "aucun"}:
-                trouvailles.append({"reponse": texte, "le": commentaire.get("created_at")})
+            if texte in REPONSES_VALIDES:
+                trouvailles.append(texte)
     return trouvailles
 
 
-def genres_du_jour(jour: str) -> list[dict]:
-    """Les trois premiers programmes de la grille, avec leur genre."""
-    fichier = RACINE / "top3" / f"{jour}.md"
-    if not fichier.exists():
-        return []
-    lignes = [ligne for ligne in fichier.read_text(encoding="utf-8").splitlines()
-              if ligne[:2] in {"1.", "2.", "3."}]
+def genre_du_rang(jour: str, rang: int) -> str | None:
+    """Genre du programme classé à ce rang, lu dans la grille du jour.
+
+    La grille est le fichier écrit par scripts/soir.py. Si elle a disparu — le
+    workflow peut tourner le lendemain — on se rabat sur les journaux conservés
+    dans top3/, qui gardent la trace du classement.
+    """
     grille = RACINE / "data" / f"grille-{jour}.json"
-    if not grille.exists():
-        return []
-    contenu = json.loads(grille.read_text(encoding="utf-8"))
-    return contenu.get("programmes", [])
+    if grille.exists():
+        try:
+            contenu = json.loads(grille.read_text(encoding="utf-8"))
+            programmes = contenu.get("programmes", [])
+            if rang < len(programmes):
+                return programmes[rang].get("genre")
+        except Exception as e:
+            print(f"Grille illisible ({grille.name}) : {e}", file=sys.stderr)
+
+    # Repli : retrouver le genre dans le fichier de notes s'il existe.
+    autres = sorted((RACINE / "data").glob(f"grille-*.json"))
+    if autres:
+        try:
+            contenu = json.loads(autres[-1].read_text(encoding="utf-8"))
+            programmes = contenu.get("programmes", [])
+            if rang < len(programmes):
+                print(f"Grille du {jour} absente : repli sur {autres[-1].name}.",
+                      file=sys.stderr)
+                return programmes[rang].get("genre")
+        except Exception:
+            pass
+
+    print(f"Grille du {jour} introuvable : impossible de retrouver le genre.", file=sys.stderr)
+    return None
 
 
 def ajuster(profil: dict, genre: str, sens: int) -> tuple[float, float]:
@@ -109,40 +147,26 @@ def main() -> int:
     ap.add_argument("--essai", action="store_true", help="affiche sans écrire")
     args = ap.parse_args()
 
-    dossier = RACINE / "top3"
-    if args.jour:
-        jour = args.jour
-    else:
-        fichiers = sorted(dossier.glob("20??-??-??.md")) if dossier.exists() else []
-        if not fichiers:
-            print("Aucun top 3 enregistré : rien à apprendre.", file=sys.stderr)
-            return 0
-        jour = fichiers[-1].stem
+    jour = args.jour or dernier_jour_traite()
+    if not jour:
+        print("Aucun top 3 enregistré : rien à apprendre. Le profil ne bouge pas.")
+        return 0
 
-    reponses = reponses_du_jour(jour)
+    reponses = reponses_pour(jour)
     if not reponses:
         print(f"Aucune réponse pour le {jour}. Le profil ne bouge pas.")
         return 0
 
-    derniere = reponses[-1]["reponse"]
-    programmes = genres_du_jour(jour)
-    if not programmes:
-        print(f"Grille du {jour} introuvable : impossible de retrouver le genre.", file=sys.stderr)
-        return 1
+    derniere = reponses[-1]
+    rang = 0 if derniere == "aucun" else int(derniere) - 1
+    sens = -1 if derniere == "aucun" else +1
+
+    genre = genre_du_rang(jour, rang)
+    if not genre:
+        print("Genre introuvable : le profil ne bouge pas.")
+        return 0
 
     profil = json.loads(PROFIL.read_text(encoding="utf-8"))
-
-    if derniere == "aucun":
-        genre = programmes[0].get("genre", "inconnu")
-        sens = -1
-    else:
-        rang = int(derniere) - 1
-        if rang >= len(programmes):
-            print(f"Réponse « {derniere} » hors du top 3 : rien à ajuster.")
-            return 0
-        genre = programmes[rang].get("genre", "inconnu")
-        sens = +1
-
     avant, apres = ajuster(profil, genre, sens)
     print(f"Réponse « {derniere} » — genre « {genre} » : {avant} -> {apres}")
 
@@ -154,7 +178,10 @@ def main() -> int:
 
     historique = []
     if JOURNAL.exists():
-        historique = json.loads(JOURNAL.read_text(encoding="utf-8"))
+        try:
+            historique = json.loads(JOURNAL.read_text(encoding="utf-8"))
+        except Exception:
+            historique = []
     historique.append({"jour": jour, "reponse": derniere, "genre": genre,
                        "avant": avant, "apres": apres})
     JOURNAL.write_text(json.dumps(historique, ensure_ascii=False, indent=2), encoding="utf-8")
