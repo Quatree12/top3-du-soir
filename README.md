@@ -8,45 +8,58 @@ Un classement qui tranche, non. C'est tout ce que ce dépôt essaie de faire.
 
 ## État du projet
 
-Prototype. Trois briques sur quatre fonctionnent :
-
 | Brique | État |
 |---|---|
-| 1. Récupération de la grille | Partielle — export XML TF1 Pro, en mono-chaîne |
+| 1. Récupération de la grille | Fonctionne pour le groupe TF1 (TF1 Pro) |
 | 2. Moteur de notation | Fonctionne |
 | 3. Générateur de message | Fonctionne |
 | 4. Boucle de retour | Pas commencée |
 
 Aucune dépendance : bibliothèque standard uniquement, Python 3.10 ou plus récent.
 
-## Utilisation
+## Démarrage rapide
 
 ```bash
-# 1. Convertir un export XML TF1 Pro en grille exploitable
-python3 sources/tf1pro.py --fichier export-tf1.xml --jour 2026-11-11 \
-        --chaine TF1 --sortie data/grille-2026-11-11.json
+# 1. Quelles chaînes répondent ? (à faire une fois)
+python3 sources/recuperer.py --sonder
 
-# Variante : ne garder que la soirée (à partir de 19 h)
-python3 sources/tf1pro.py --fichier export-tf1.xml --jour 2026-11-11 \
-        --chaine TF1 --soir-seulement --sortie data/grille-soir.json
+# 2. La soirée du jour, téléchargée et classée en une commande
+python3 sources/recuperer.py --profil data/profil-exemple.json
 
-# Lister les jours contenus dans un export
-python3 sources/tf1pro.py --fichier export-tf1.xml --jour 2026-11-11 --liste
-
-# 2. Classer
-python3 top3.py data/grille-2026-11-11.json
-python3 top3.py data/grille-2026-11-11.json --profil data/profil-exemple.json
-python3 top3.py data/grille-2026-11-11.json --profil data/profil-exemple.json --tout
+# 3. Un jour précis
+python3 sources/recuperer.py --jour 2026-11-11 --profil data/profil-exemple.json
 ```
-
-`--tout` affiche en plus les programmes écartés par les filtres et toutes les
-notes, de la meilleure à la moins bonne.
 
 ## La source : export XML TF1 Pro
 
-Le groupe TF1 publie une grille XML par chaîne, à récupérer depuis le site
-TF1 Pro (page de la chaîne, lien « Télécharger (XML) »). Structure réelle du
-fichier, vérifiée sur un export :
+Le groupe TF1 publie une grille XML par chaîne et par semaine :
+
+```text
+https://tf1pro.com/grilles-xml/<numéro de chaîne>/<samedi de la semaine>
+```
+
+Exemple vérifié : `https://tf1pro.com/grilles-xml/22/2026-11-07` (TMC, semaine 46,
+du 7 au 13 novembre 2026). **L'accès est ouvert, sans compte.**
+
+Les exports vont du **samedi au vendredi**. Le script calcule donc le samedi de la
+semaine qui contient la date demandée : une demande pour le mercredi 11 novembre
+récupère l'export du 7 novembre.
+
+### Numéros de chaîne
+
+| Numéro | Chaîne | Statut |
+|---|---|---|
+| 22 | TMC | Confirmé |
+| 1 | TF1 | Hypothèse, à tester |
+| 3 | TFX | Hypothèse, à tester |
+| 4 | TF1 Séries Films | Hypothèse, à tester |
+| 5 | LCI | Hypothèse, à tester |
+
+`python3 sources/recuperer.py --sonder` teste chaque numéro et dit lesquels
+répondent. Si un numéro échoue, ouvre la page de la chaîne sur TF1 Pro et relève
+le lien « Télécharger (XML) » : le numéro est dans l'URL.
+
+### Structure du fichier
 
 ```xml
 <EXPORT_TF1_PRO>
@@ -57,7 +70,6 @@ fichier, vérifiée sur un export :
         <titre><![CDATA[Esprits criminels : Evolution]]></titre>
         <sousTitre><![CDATA[La mémoire de l'eau]]></sousTitre>
         <typeEmission><![CDATA[Série]]></typeEmission>
-        <partieJour><![CDATA[1 PS]]></partieJour>
         <ineditTV valeur="1"><![CDATA[INEDIT]]></ineditTV>
         <replay valeur="0"/>
       </EMISSION>
@@ -66,25 +78,60 @@ fichier, vérifiée sur un export :
 </EXPORT_TF1_PRO>
 ```
 
-Trois limites de cette source, à connaître :
+Trois limites de cette source :
 
 1. **Pas d'heure de fin ni de durée.** La durée se déduit de l'écart avec le
-   programme suivant sur la même chaîne. Le lecteur le fait (`data/`).
-2. **Pas de note de presse.** Le critère « réputation » du classement reste donc
-   neutre (5/10) pour tous les programmes issus de cette source.
-3. **Quatre genres seulement** : Série, Téléfilm, Divertissement, Info,
-   Programme court. Ils sont traduits vers les genres attendus par `top3.py`.
+   programme suivant sur la même chaîne. Deux artefacts en découlent : un
+   programme de transition peut ressortir très court, et un programme qui franchit
+   minuit est mal calculé.
+2. **Pas de note de presse.** Le critère « réputation » du classement reste neutre
+   (5/10) pour tous les programmes issus de cette source.
+3. **Cinq genres seulement** : Série, Téléfilm, Divertissement, Info, Programme
+   court. Ils sont traduits vers les genres attendus par `top3.py`.
 
-**Une chaîne par export.** Le classement devient vraiment utile à partir de trois
-ou quatre exports combinés : avec une seule chaîne, les critères objectifs se
-ressemblent trop et le top 3 ne tranche plus rien.
+**M6, W9, RTS 1 et RTS 2 ne sont pas dans l'écosystème TF1 Pro.** Il faut une
+autre source pour elles.
 
-M6, W9, RTS 1 et RTS 2 ne sont pas dans l'écosystème TF1 Pro : il faut une autre
-source pour elles.
+## Chaînes de traitement
+
+```text
+recuperer.py  →  télécharge l'export XML
+              →  tf1pro.py convertit en grille JSON
+              →  fusionne toutes les chaînes en une seule soirée
+              →  top3.py classe et affiche le top 3
+```
+
+Chaque étape est utilisable seule : `tf1pro.py` sur un fichier déjà téléchargé,
+`top3.py` sur une grille écrite à la main.
+
+## Planification
+
+Pour recevoir le top 3 chaque soir sans rien lancer, programme la commande :
+
+```bash
+python3 sources/recuperer.py --profil data/profil-exemple.json \
+  >> journal-soir.log 2>&1
+```
+
+**Linux / macOS** — `crontab -e`, puis une ligne pour 18 h 30 du lundi au vendredi :
+
+```cron
+30 18 * * 1-5 cd /chemin/vers/top3-du-soir && /usr/bin/python3 sources/recuperer.py --profil data/profil-exemple.json >> journal-soir.log 2>&1
+```
+
+**Windows** — Planificateur de tâches, action « Démarrer un programme » :
+
+```text
+Programme   : python
+Arguments  : sources\recuperer.py --profil data\profil-exemple.json
+Démarrer dans : C:\chemin\vers\top3-du-soir
+Déclencheur : tous les jours, 18:30
+```
+
+À ce stade, la sortie va dans un journal local. L'envoi par mail ou message n'est
+pas branché.
 
 ## Entrée : la grille
-
-Un fichier JSON avec une liste de programmes :
 
 ```json
 {
@@ -104,11 +151,9 @@ Un fichier JSON avec une liste de programmes :
 }
 ```
 
-Les champs `inedit`, `note_presse` et `replay` sont optionnels. Une note de presse
-absente rend le critère « réputation » neutre plutôt que de pénaliser le programme.
-
-Genres reconnus : `serie`, `feuilleton`, `film`, `documentaire`, `divertissement`,
-`magazine`, `jeu`, `info`.
+Les champs `inedit`, `note_presse` et `replay` sont optionnels. Genres reconnus :
+`serie`, `feuilleton`, `film`, `documentaire`, `divertissement`, `magazine`,
+`jeu`, `info`.
 
 ## Entrée : le profil
 
@@ -116,7 +161,7 @@ Genres reconnus : `serie`, `feuilleton`, `film`, `documentaire`, `divertissement
 {
   "debut_soiree": "19:00",
   "heure_coucher": "23:30",
-  "chaines_captees": ["TF1", "M6", "RTS Un"],
+  "chaines_captees": ["TF1", "TMC", "RTS Un"],
   "genres_aimes": { "serie": 8, "film": 7, "divertissement": 4 },
   "genres_exclus": ["jeu"],
   "deja_vus": ["Hunger Games"],
@@ -167,19 +212,17 @@ Ce soir — mercredi 11 novembre
 3. JT 20h Semaine — TF1, 20:00, 0 h 45.  Note 6.8
    Pourquoi : fini à 20:45, avant ton coucher.
 
-Juste derrière : Koh-Lanta (TF1, 5.8)
-
 Réponds « 1 », « 2 », « 3 » ou « aucun » pour affiner les prochains classements.
 ```
 
 ## Ce qui manque
 
-- **Les autres chaînes.** Le lecteur TF1 Pro est validé pour une chaîne ; il faut
-  les exports TMC, TFX et consorts, et une autre source pour M6, W9, RTS 1 et RTS 2.
+- **Les autres chaînes.** Le groupe TF1 est couvert ; M6, W9, RTS 1 et RTS 2
+  demandent une autre source.
 - **La boucle de retour.** Le message demande une réponse, mais rien ne la lit
   encore : `genres_aimes` et `majoration_chaine` se modifient à la main.
-- **L'envoi.** Le script écrit dans le terminal. Mail, message ou notification
-  restent à brancher.
+- **L'envoi.** La sortie va dans le terminal ou un journal. Mail, message ou
+  notification restent à brancher.
 - **Les notes de presse.** Absentes de l'export TF1 Pro, donc le critère
   « réputation » est inerte sur cette source.
 
