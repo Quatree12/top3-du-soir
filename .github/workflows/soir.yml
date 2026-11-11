@@ -13,7 +13,7 @@ on:
         default: ""
 
 permissions:
-  contents: write      # pour committer les fichiers top3/
+  contents: write      # pour committer les fichiers top3/ et le profil ajusté
   issues: write        # pour ouvrir l'issue du soir
 
 jobs:
@@ -27,6 +27,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Appliquer la réponse d'hier
+        run: python3 scripts/boucle.py
+        env:
+          PROFIL_TOKEN: ${{ secrets.PROFIL_TOKEN }}
+        continue-on-error: true
 
       - name: Construire le top 3
         id: classement
