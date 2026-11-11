@@ -38,28 +38,26 @@ Le groupe TF1 publie une grille XML par chaîne et par semaine :
 https://tf1pro.com/grilles-xml/<numéro de chaîne>/<samedi de la semaine>
 ```
 
-Exemple vérifié : `https://tf1pro.com/grilles-xml/22/2026-11-07` (TMC, semaine 46,
-du 7 au 13 novembre 2026). **L'accès est ouvert, sans compte.**
-
-Les exports vont du **samedi au vendredi**. Le script calcule donc le samedi de la
-semaine qui contient la date demandée : une demande pour le mercredi 11 novembre
-récupère l'export du 7 novembre.
-
-### Numéros de chaîne
+Numéros relevés sur TF1 Pro pour la semaine 46 (7 au 13 novembre 2026) :
 
 | Numéro | Chaîne | Statut |
 |---|---|---|
+| 17 | TF1 | Confirmé |
+| 18 | TFX | Confirmé |
 | 22 | TMC | Confirmé |
-| 1 | TF1 | Hypothèse, à tester |
-| 3 | TFX | Hypothèse, à tester |
-| 4 | TF1 Séries Films | Hypothèse, à tester |
-| 5 | LCI | Hypothèse, à tester |
+| 1 | TF1 Séries Films | Hypothèse, à tester |
+| 3 | LCI | Hypothèse, à tester |
 
-`python3 sources/recuperer.py --sonder` teste chaque numéro et dit lesquels
-répondent. Si un numéro échoue, ouvre la page de la chaîne sur TF1 Pro et relève
-le lien « Télécharger (XML) » : le numéro est dans l'URL.
+Exemples : `https://tf1pro.com/grilles-xml/17/2026-11-07` (TF1),
+`https://tf1pro.com/grilles-xml/18/2026-11-07` (TFX),
+`https://tf1pro.com/grilles-xml/22/2026-11-07` (TMC). **L'accès est ouvert, sans
+compte.**
 
-### Structure du fichier
+Les exports vont du **samedi au vendredi**. Le script calcule donc le samedi de
+la semaine qui contient la date demandée : une demande pour le mercredi
+11 novembre récupère l'export du 7 novembre.
+
+Structure réelle du fichier, vérifiée sur un export :
 
 ```xml
 <EXPORT_TF1_PRO>
@@ -70,6 +68,7 @@ le lien « Télécharger (XML) » : le numéro est dans l'URL.
         <titre><![CDATA[Esprits criminels : Evolution]]></titre>
         <sousTitre><![CDATA[La mémoire de l'eau]]></sousTitre>
         <typeEmission><![CDATA[Série]]></typeEmission>
+        <partieJour><![CDATA[1 PS]]></partieJour>
         <ineditTV valeur="1"><![CDATA[INEDIT]]></ineditTV>
         <replay valeur="0"/>
       </EMISSION>
@@ -78,16 +77,16 @@ le lien « Télécharger (XML) » : le numéro est dans l'URL.
 </EXPORT_TF1_PRO>
 ```
 
-Trois limites de cette source :
+Trois limites de cette source, à connaître :
 
 1. **Pas d'heure de fin ni de durée.** La durée se déduit de l'écart avec le
    programme suivant sur la même chaîne. Deux artefacts en découlent : un
    programme de transition peut ressortir très court, et un programme qui franchit
    minuit est mal calculé.
-2. **Pas de note de presse.** Le critère « réputation » du classement reste neutre
-   (5/10) pour tous les programmes issus de cette source.
-3. **Cinq genres seulement** : Série, Téléfilm, Divertissement, Info, Programme
-   court. Ils sont traduits vers les genres attendus par `top3.py`.
+2. **Pas de note de presse.** Le critère « réputation » du classement reste donc
+   neutre (5/10) pour tous les programmes issus de cette source.
+3. **Quatre genres seulement** : Série, Téléfilm, Divertissement, Info,
+   Programme court. Ils sont traduits vers les genres attendus par `top3.py`.
 
 **M6, W9, RTS 1 et RTS 2 ne sont pas dans l'écosystème TF1 Pro.** Il faut une
 autre source pour elles.
@@ -161,7 +160,7 @@ Les champs `inedit`, `note_presse` et `replay` sont optionnels. Genres reconnus 
 {
   "debut_soiree": "19:00",
   "heure_coucher": "23:30",
-  "chaines_captees": ["TF1", "TMC", "RTS Un"],
+  "chaines_captees": ["TF1", "TFX", "TMC", "RTS Un"],
   "genres_aimes": { "serie": 8, "film": 7, "divertissement": 4 },
   "genres_exclus": ["jeu"],
   "deja_vus": ["Hunger Games"],

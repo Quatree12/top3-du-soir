@@ -6,9 +6,14 @@ TF1 Pro sert un export XML par chaîne et par semaine, à cette adresse :
 
     https://tf1pro.com/grilles-xml/<numéro de chaîne>/<samedi de la semaine>
 
-Vérifié pour TMC : https://tf1pro.com/grilles-xml/22/2026-11-07 (semaine 46).
-L'accès est ouvert, sans compte. Le numéro de chaîne reste à confirmer pour TF1,
-TFX et TF1 Séries Films : c'est ce que `--sonder` sert à faire.
+Numéros relevés sur TF1 Pro (semaine 46, 7 au 13 novembre 2026) :
+
+    17 -> TF1              https://tf1pro.com/grilles-xml/17/2026-11-07
+    18 -> TFX              https://tf1pro.com/grilles-xml/18/2026-11-07
+    22 -> TMC              https://tf1pro.com/grilles-xml/22/2026-11-07
+
+L'accès est ouvert, sans compte. Les numéros de TF1 Séries Films et de LCI
+restent à confirmer : c'est ce que `--sonder` sert à faire.
 
 Ce script enchaîne les trois étapes :
 
@@ -20,7 +25,7 @@ Usage :
     # Quelles chaînes répondent ?
     python3 sources/recuperer.py --sonder
 
-    # La soirée du 11 novembre, sur toutes les chaînes qui répondent
+    # La soirée du 11 novembre, sur toutes les chaînes connues
     python3 sources/recuperer.py --jour 2026-11-11 --profil data/profil-exemple.json
 
     # Une seule chaîne, et on garde les fichiers intermédiaires
@@ -44,16 +49,16 @@ AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
          "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
 
 # Numéro de chaîne dans l'écosystème TF1 Pro -> nom.
-# 22 = TMC, confirmé par une URL fournie par l'utilisateur.
-# Les autres sont des hypothèses tant que --sonder ne les a pas confirmées.
 CHAINES = {
-    "1": "TF1",
+    "17": "TF1",
+    "18": "TFX",
     "22": "TMC",
-    "3": "TFX",
-    "4": "TF1 Séries Films",
-    "5": "LCI",
+    "1": "TF1 Séries Films",
+    "3": "LCI",
 }
-CHAINES_HYPOTHESE = {"1", "3", "4", "5"}
+# Numéros relevés dans l'URL du lien « Télécharger (XML) » sur TF1 Pro.
+CHAINES_CONFIRMEES = {"17", "18", "22"}
+CHAINES_HYPOTHESE = {"1", "3"}
 
 
 def samedi_de_la_semaine(jour: date) -> date:
@@ -80,7 +85,7 @@ def telecharger(url: str, essais: int = 2) -> bytes | None:
 
 
 def sonder(jour: date) -> dict[str, bool]:
-    """Teste chaque numéro de chaîne deviné et dit lesquels répondent."""
+    """Teste chaque numéro de chaîne connu et dit lesquels répondent."""
     semaine = samedi_de_la_semaine(jour).isoformat()
     print(f"Semaine testée : {semaine}\n")
     resultats = {}
