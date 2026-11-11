@@ -5,5 +5,12 @@
     "genre": "serie",
     "avant": 8.0,
     "apres": 7.8
+  },
+  {
+    "jour": "2026-11-11",
+    "reponse": "aucun",
+    "genre": "serie",
+    "avant": 7.8,
+    "apres": 7.6
   }
 ]
