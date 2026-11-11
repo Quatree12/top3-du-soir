@@ -1,10 +1,18 @@
 {
   "debut_soiree": "19:00",
   "heure_coucher": "01:45",
-  "chaines_captees": ["TF1", "M6", "W9", "TMC", "TFX", "6ter", "TF1 Séries Films"],
+  "chaines_captees": [
+    "TF1",
+    "M6",
+    "W9",
+    "TMC",
+    "TFX",
+    "6ter",
+    "TF1 Séries Films"
+  ],
   "genres_aimes": {
     "film": 10,
-    "serie": 8,
+    "serie": 7.8,
     "documentaire": 7,
     "magazine": 5,
     "quotidienne": 4,
