@@ -1,16 +1,20 @@
 {
   "debut_soiree": "19:00",
   "heure_coucher": "23:30",
-  "chaines_captees": ["TF1", "M6", "W9", "TMC", "RTS Un", "RTS Deux"],
+  "chaines_captees": ["TF1", "M6", "W9", "TMC", "TFX", "6ter", "TF1 Séries Films", "RTS Un", "RTS Deux"],
   "genres_aimes": {
-    "serie": 8,
-    "film": 7,
+    "film": 8,
+    "serie": 7,
     "documentaire": 6,
+    "magazine": 5,
+    "quotidienne": 5,
     "divertissement": 4,
-    "magazine": 3,
-    "jeu": 3
+    "jeu": 4,
+    "info": 3,
+    "sport": 3
   },
   "genres_exclus": [],
+  "emissions_bannies": [],
   "deja_vus": [],
   "majoration_chaine": {}
 }
