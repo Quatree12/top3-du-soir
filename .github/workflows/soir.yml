@@ -1,0 +1,81 @@
+name: Top 3 du soir
+
+on:
+  schedule:
+    # 18 h 30 à Paris, du lundi au vendredi (17 h 30 UTC l'hiver).
+    # GitHub retarde parfois de quelques minutes aux heures chargées.
+    - cron: "30 17 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      jour:
+        description: "Date à classer (AAAA-MM-JJ). Vide = aujourd'hui."
+        required: false
+        default: ""
+
+permissions:
+  contents: write      # pour committer les fichiers top3/
+  issues: write        # pour ouvrir l'issue du soir
+
+jobs:
+  top3:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Construire le top 3
+        id: classement
+        run: |
+          python3 scripts/soir.py --profil data/profil.json \
+            ${JOUR:+--jour "$JOUR"} > sortie.txt 2> journal.txt
+          cat journal.txt
+          echo "--- top 3 ---"
+          cat sortie.txt
+        env:
+          JOUR: ${{ inputs.jour }}
+        continue-on-error: true
+
+      - name: Publier les fichiers dans le dépôt
+        run: |
+          git config user.name "top3-bot"
+          git config user.email "top3-bot@users.noreply.github.com"
+          git add top3/ data/ 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "Rien à committer."
+          else
+            git commit -m "Top 3 du $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      - name: Ouvrir l'issue du soir
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let corps = "Le classement n'a pas pu être produit. Journal :\n\n```\n";
+            try {
+              corps += fs.readFileSync('journal.txt', 'utf8').slice(-3000) + "\n```";
+            } catch (e) {
+              corps += "aucun journal\n```";
+            }
+            let titre = "Top 3 du soir — " + new Date().toISOString().slice(0, 10);
+            try {
+              const sortie = fs.readFileSync('sortie.txt', 'utf8').trim();
+              if (sortie) {
+                corps = "```\n" + sortie + "\n```\n\n"
+                      + "Fichier à consulter : [`top3/dernier.md`](../blob/main/top3/dernier.md)\n\n"
+                      + "Réponds en commentaire : `1`, `2`, `3` ou `aucun`.";
+              }
+            } catch (e) {}
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: titre,
+              body: corps,
+            });
