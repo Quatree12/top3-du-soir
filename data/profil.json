@@ -1,7 +1,7 @@
 {
   "debut_soiree": "19:00",
   "heure_coucher": "01:45",
-  "chaines_captees": ["TF1", "M6", "W9", "TMC", "TFX", "6ter", "TF1 Séries Films", "RTS Un", "RTS Deux"],
+  "chaines_captees": ["TF1", "M6", "W9", "TMC", "TFX", "6ter", "TF1 Séries Films"],
   "genres_aimes": {
     "film": 10,
     "serie": 8,
@@ -16,7 +16,7 @@
   "emissions_bannies": [
     "touche pas à mon poste",
     "tpmp",
-    "la ville des coeurs brisés",
+    "la villa des coeurs brisés",
     "les apprentis aventuriers",
     "super nanny",
     "koh-lanta",
