@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-11",
+  "source": "export XML TF1 Pro — TF1",
+  "note": "Grille réelle convertie depuis un export TF1 Pro (semaine 46, 7-13 novembre 2026). Durées déduites de l'écart entre programmes successifs : l'export ne les fournit pas. Les miroirs 21:05 (Koh-Lanta) et 00:00 sont des artefacts de cette déduction.",
+  "programmes": [
+    {"chaine": "TF1", "titre": "TFou", "debut": "05:50", "duree_min": 65, "genre": "serie", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "Bonjour ! — La matinale TF1", "debut": "06:55", "duree_min": 185, "genre": "info", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "Bonjour ! — Avec vous", "debut": "10:00", "duree_min": 55, "genre": "info", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "Les feux de l'amour — Episode 9604", "debut": "10:55", "duree_min": 50, "genre": "serie", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "Les 12 coups de midi", "debut": "11:50", "duree_min": 65, "genre": "divertissement", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "JT 13h Semaine", "debut": "13:00", "duree_min": 50, "genre": "info", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "Plus belle la vie, encore plus belle — Episode 712", "debut": "14:00", "duree_min": 25, "genre": "serie", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "Opération pères Noël", "debut": "14:25", "duree_min": 95, "genre": "film", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "L'école des pères Noël", "debut": "16:00", "duree_min": 90, "genre": "film", "inedit": false, "replay": false},
+    {"chaine": "TF1", "titre": "Star Academy", "debut": "17:30", "duree_min": 60, "genre": "divertissement", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "Ici tout commence — Episode 1565", "debut": "18:30", "duree_min": 40, "genre": "serie", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "Demain nous appartient — Episode 2333", "debut": "19:10", "duree_min": 45, "genre": "serie", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "JT 20h Semaine", "debut": "20:00", "duree_min": 45, "genre": "info", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "Koh-Lanta", "debut": "21:05", "duree_min": 5, "genre": "divertissement", "inedit": false, "replay": false},
+    {"chaine": "TF1", "titre": "Esprits criminels : Evolution — La mémoire de l'eau", "debut": "21:10", "duree_min": 45, "genre": "serie", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "Esprits criminels : Evolution — Le dompteur", "debut": "21:55", "duree_min": 65, "genre": "serie", "inedit": true, "replay": false},
+    {"chaine": "TF1", "titre": "Esprits criminels : Evolution — L'effet de surprise", "debut": "23:00", "duree_min": 60, "genre": "serie", "inedit": false, "replay": false},
+    {"chaine": "TF1", "titre": "Esprits criminels : Evolution — Contagion", "debut": "00:00", "duree_min": 55, "genre": "serie", "inedit": false, "replay": false}
+  ]
+}

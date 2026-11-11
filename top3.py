@@ -34,6 +34,7 @@ POIDS = {
 }
 
 PROFIL_DEFAUT = {
+    "debut_soiree": "19:00",
     "heure_coucher": "23:30",
     "chaines_captees": [],
     "genres_aimes": {},
@@ -177,15 +178,24 @@ def noter(p: Programme, profil: dict) -> Programme:
     # Réputation : neutre tant qu'on n'a pas de note
     reputation = 5.0 if p.note_presse is None else max(0.0, min(10.0, p.note_presse))
 
-    # Compatibilité horaire : est-ce que ça finit avant le coucher ?
+    # Compatibilité horaire : le programme doit tomber dans la fenêtre de soirée.
+    # Un critère qui ne regardait que « est-ce fini avant le coucher » notait 10/10
+    # une émission de 5 h 50 du matin : la borne de début manquait.
+    debut_soiree = datetime(2000, 1, 1, *[int(x) for x in profil.get("debut_soiree", "19:00").split(":")])
     coucher = datetime(2000, 1, 1, *[int(x) for x in profil.get("heure_coucher", "23:30").split(":")])
-    marge = (coucher - p.fin_dt).total_seconds() / 60
-    if marge >= 15:
-        compatibilite = 10.0
-    elif marge >= 0:
-        compatibilite = 8.0
+
+    if p.debut_dt < debut_soiree:
+        # Hors de la fenêtre : d'autant plus bas qu'on s'en éloigne.
+        avance = (debut_soiree - p.debut_dt).total_seconds() / 60
+        compatibilite = max(0.0, 3.0 - avance / 120)          # 6 h d'avance => 0
     else:
-        compatibilite = max(0.0, 6.0 + marge / 6)   # -36 min => 0
+        marge = (coucher - p.fin_dt).total_seconds() / 60
+        if marge >= 15:
+            compatibilite = 10.0
+        elif marge >= 0:
+            compatibilite = 8.0
+        else:
+            compatibilite = max(0.0, 6.0 + marge / 6)          # -36 min => 0
 
     # Confort : replay disponible
     confort = 9.0 if p.replay else 6.0

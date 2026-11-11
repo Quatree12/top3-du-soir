@@ -1,4 +1,5 @@
 {
+  "debut_soiree": "19:00",
   "heure_coucher": "23:30",
   "chaines_captees": ["TF1", "M6", "W9", "TMC", "RTS Un", "RTS Deux"],
   "genres_aimes": {

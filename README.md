@@ -8,23 +8,79 @@ Un classement qui tranche, non. C'est tout ce que ce dépôt essaie de faire.
 
 ## État du projet
 
-Prototype. C'est la brique 2 (moteur de notation) et la brique 3 (générateur de
-message) de la spécification, qui fonctionnent sur une grille fournie à la main.
-La récupération automatique des programmes n'est **pas** branchée : pour l'instant
-tu remplis un fichier JSON et le script fait le reste.
+Prototype. Trois briques sur quatre fonctionnent :
+
+| Brique | État |
+|---|---|
+| 1. Récupération de la grille | Partielle — export XML TF1 Pro, en mono-chaîne |
+| 2. Moteur de notation | Fonctionne |
+| 3. Générateur de message | Fonctionne |
+| 4. Boucle de retour | Pas commencée |
+
+Aucune dépendance : bibliothèque standard uniquement, Python 3.10 ou plus récent.
 
 ## Utilisation
 
 ```bash
-python3 top3.py data/grille-exemple.json
-python3 top3.py data/grille-exemple.json --profil data/profil-exemple.json
-python3 top3.py data/grille-exemple.json --profil data/profil-exemple.json --tout
+# 1. Convertir un export XML TF1 Pro en grille exploitable
+python3 sources/tf1pro.py --fichier export-tf1.xml --jour 2026-11-11 \
+        --chaine TF1 --sortie data/grille-2026-11-11.json
+
+# Variante : ne garder que la soirée (à partir de 19 h)
+python3 sources/tf1pro.py --fichier export-tf1.xml --jour 2026-11-11 \
+        --chaine TF1 --soir-seulement --sortie data/grille-soir.json
+
+# Lister les jours contenus dans un export
+python3 sources/tf1pro.py --fichier export-tf1.xml --jour 2026-11-11 --liste
+
+# 2. Classer
+python3 top3.py data/grille-2026-11-11.json
+python3 top3.py data/grille-2026-11-11.json --profil data/profil-exemple.json
+python3 top3.py data/grille-2026-11-11.json --profil data/profil-exemple.json --tout
 ```
 
 `--tout` affiche en plus les programmes écartés par les filtres et toutes les
 notes, de la meilleure à la moins bonne.
 
-Aucune dépendance : bibliothèque standard uniquement, Python 3.10 ou plus récent.
+## La source : export XML TF1 Pro
+
+Le groupe TF1 publie une grille XML par chaîne, à récupérer depuis le site
+TF1 Pro (page de la chaîne, lien « Télécharger (XML) »). Structure réelle du
+fichier, vérifiée sur un export :
+
+```xml
+<EXPORT_TF1_PRO>
+  <DERNIERE_MAJ>10/11/2026</DERNIERE_MAJ>
+  <GRILLE numeroSemaine="46" dateDebut="07/11/2026" dateFin="13/11/2026">
+    <JOUR id="4" date="11/11/2026">
+      <EMISSION heureDiffusion="21.10">
+        <titre><![CDATA[Esprits criminels : Evolution]]></titre>
+        <sousTitre><![CDATA[La mémoire de l'eau]]></sousTitre>
+        <typeEmission><![CDATA[Série]]></typeEmission>
+        <partieJour><![CDATA[1 PS]]></partieJour>
+        <ineditTV valeur="1"><![CDATA[INEDIT]]></ineditTV>
+        <replay valeur="0"/>
+      </EMISSION>
+    </JOUR>
+  </GRILLE>
+</EXPORT_TF1_PRO>
+```
+
+Trois limites de cette source, à connaître :
+
+1. **Pas d'heure de fin ni de durée.** La durée se déduit de l'écart avec le
+   programme suivant sur la même chaîne. Le lecteur le fait (`data/`).
+2. **Pas de note de presse.** Le critère « réputation » du classement reste donc
+   neutre (5/10) pour tous les programmes issus de cette source.
+3. **Quatre genres seulement** : Série, Téléfilm, Divertissement, Info,
+   Programme court. Ils sont traduits vers les genres attendus par `top3.py`.
+
+**Une chaîne par export.** Le classement devient vraiment utile à partir de trois
+ou quatre exports combinés : avec une seule chaîne, les critères objectifs se
+ressemblent trop et le top 3 ne tranche plus rien.
+
+M6, W9, RTS 1 et RTS 2 ne sont pas dans l'écosystème TF1 Pro : il faut une autre
+source pour elles.
 
 ## Entrée : la grille
 
@@ -49,8 +105,7 @@ Un fichier JSON avec une liste de programmes :
 ```
 
 Les champs `inedit`, `note_presse` et `replay` sont optionnels. Une note de presse
-absente rend le critère « réputation » neutre (5/10) plutôt que de pénaliser le
-programme.
+absente rend le critère « réputation » neutre plutôt que de pénaliser le programme.
 
 Genres reconnus : `serie`, `feuilleton`, `film`, `documentaire`, `divertissement`,
 `magazine`, `jeu`, `info`.
@@ -59,6 +114,7 @@ Genres reconnus : `serie`, `feuilleton`, `film`, `documentaire`, `divertissement
 
 ```json
 {
+  "debut_soiree": "19:00",
   "heure_coucher": "23:30",
   "chaines_captees": ["TF1", "M6", "RTS Un"],
   "genres_aimes": { "serie": 8, "film": 7, "divertissement": 4 },
@@ -68,8 +124,9 @@ Genres reconnus : `serie`, `feuilleton`, `film`, `documentaire`, `divertissement
 }
 ```
 
-- `heure_coucher` : sert au critère de compatibilité horaire. Un programme qui
-  finit après est fortement pénalisé, surtout s'il déborde de plus de 35 minutes.
+- `debut_soiree` et `heure_coucher` délimitent la fenêtre de soirée. Un programme
+  qui commence avant 19 h ou qui finit après l'heure de coucher est fortement
+  pénalisé ; le critère de compatibilité horaire ne regarde pas seulement la fin.
 - `chaines_captees` : vide = toutes les chaînes de la grille sont retenues.
 - `genres_aimes` : une note de 0 à 10 par genre, utilisée telle quelle comme
   critère d'affinité. Un genre absent vaut 5.
@@ -88,11 +145,11 @@ la moyenne pondérée :
 | Affinité | 30 % | Genre déclaré dans le profil, ajusté par la chaîne |
 | Nouveauté | 20 % | Inédit (9) ou rediffusion (5) |
 | Réputation | 15 % | Note de presse, neutre si absente |
-| Compatibilité horaire | 15 % | Fini avant l'heure de coucher, ou non |
+| Compatibilité horaire | 15 % | Dans la fenêtre de soirée, et fini avant le coucher |
 | Confort | 10 % | Replay disponible |
 | Effort | 10 % | Film ou doc plutôt que série ; pénalité au-delà de 2 h 30 |
 
-Les poids sont dans le dictionnaire `POIDS`, en haut du script. C'est le seul
+Les poids sont dans le dictionnaire `POIDS`, en haut de `top3.py`. C'est le seul
 endroit à modifier pour changer le comportement du classement — le reste en
 découle.
 
@@ -101,42 +158,30 @@ découle.
 ```text
 Ce soir — mercredi 11 novembre
 
-1. Esprits criminels : Evolution — TF1, 21:10, 1 h 50.  Note 8.3
+1. Esprits criminels : Evolution — La mémoire de l'eau — TF1, 21:10, 0 h 45.  Note 7.7
+   Pourquoi : inédit, fini à 21:55, avant ton coucher, tu aimes les séries.
+
+2. Esprits criminels : Evolution — Le dompteur — TF1, 21:55, 1 h 05.  Note 7.7
    Pourquoi : inédit, fini à 23:00, avant ton coucher, tu aimes les séries.
 
-2. La vie rêvée des autres — RTS 1, 20:55, 1 h 40.  Note 8.1
-   Pourquoi : inédit, fini à 22:35, avant ton coucher, tu aimes les films.
+3. JT 20h Semaine — TF1, 20:00, 0 h 45.  Note 6.8
+   Pourquoi : fini à 20:45, avant ton coucher.
 
-3. La Petite Vadrouille — RTS 2, 20:55, 1 h 40.  Note 7.2
-   Pourquoi : fini à 22:35, avant ton coucher, tu aimes les films, replay disponible.
-
-Juste derrière : Esprits criminels (W9, 6.8) · La France a un incroyable talent (M6, 6.2)
+Juste derrière : Koh-Lanta (TF1, 5.8)
 
 Réponds « 1 », « 2 », « 3 » ou « aucun » pour affiner les prochains classements.
 ```
 
 ## Ce qui manque
 
-- **La récupération automatique de la grille.** Aujourd'hui, les programmes se
-  saisissent à la main. C'est le vrai travail restant, et de loin.
+- **Les autres chaînes.** Le lecteur TF1 Pro est validé pour une chaîne ; il faut
+  les exports TMC, TFX et consorts, et une autre source pour M6, W9, RTS 1 et RTS 2.
 - **La boucle de retour.** Le message demande une réponse, mais rien ne la lit
   encore : `genres_aimes` et `majoration_chaine` se modifient à la main.
 - **L'envoi.** Le script écrit dans le terminal. Mail, message ou notification
   restent à brancher.
-- **Canal+.** Les guides publics tronquent la grille des chaînes payantes, donc
-  la chaîne n'apparaît pas dans les exemples.
-
-## Sources de programmes
-
-Trois pistes, de la plus simple à la plus lourde :
-
-1. Saisie manuelle pour 3 ou 4 chaînes — suffisant pour juger le classement.
-2. Une base EPG commerciale ou une API de programmes — fiable, souvent payante,
-   et la licence d'usage est le vrai point de blocage, pas la technique.
-3. Agrégation depuis les pages des chaînes — gratuit, fragile, à maintenir.
-
-Certaines chaînes publient une grille XML officielle (TF1 Pro, par exemple), ce
-qui évite le scraping pour celles-là.
+- **Les notes de presse.** Absentes de l'export TF1 Pro, donc le critère
+  « réputation » est inerte sur cette source.
 
 ## Avertissement
 
