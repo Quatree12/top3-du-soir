@@ -1,16 +1,16 @@
-Ce soir — 19/11/2026
+Ce soir — 20/11/2026
 
-1. Triple je — M6, 21:10, 1 h.  Note 6.1
-   Pourquoi : attention, ça finit à 22:10, tu aimes les films, format facile à suivre.
+1. 9-1-1 — En eau trouble — 6ter, 19:00, 1 h.  Note 5.1
+   Pourquoi : attention, ça finit à 20:00, tu aimes les séries.
 
-2. Triple je — M6, 22:10, 0 h 55.  Note 6.1
-   Pourquoi : attention, ça finit à 23:05, tu aimes les films, format facile à suivre.
+2. Beverly Hills — Inconscience — TF1 Séries Films, 19:00, 1 h.  Note 5.1
+   Pourquoi : attention, ça finit à 20:00, tu aimes les séries.
 
-3. Le seigneur des anneaux : le retour du roi — TMC, 21:25, 3 h 25.  Note 5.9
-   Pourquoi : attention, ça finit à 00:50, tu aimes les films.
+3. Demain nous appartient — TF1, 19:10, 0 h 45.  Note 5.1
+   Pourquoi : attention, ça finit à 19:55, tu aimes les séries.
 
-Juste derrière : Esprits criminels — Tu parles d'un samedi (TF1, 5.1) · Friends — Celui qui regardait des requins (TF1 Séries Films, 5.1)
+Juste derrière : 9-1-1 — Des vies à sauver (6ter, 5.1) · Plus belle la vie, encore plus belle (TF1 Séries Films, 5.1)
 
-Écartés avant classement : 39 programme(s). La liste est dans le log.
+Écartés avant classement : 32 programme(s). La liste est dans le log.
 
 Réponds « 1 », « 2 », « 3 » ou « aucun » pour affiner les prochains classements.
