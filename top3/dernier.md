@@ -1,16 +1,16 @@
-Ce soir — 24/11/2026
+Ce soir — 25/11/2026
 
-1. Les Bodin's enquêtent en Corse — W9, 21:25, 0 h 35.  Note 6.1
-   Pourquoi : attention, ça finit à 22:00, tu aimes les films, format facile à suivre.
+1. 9-1-1 — Le jour des morts — 6ter, 19:00, 1 h.  Note 5.1
+   Pourquoi : attention, ça finit à 20:00, tu aimes les séries.
 
-2. Les Bodin's enquêtent en Corse — W9, 22:00, 1 h 10.  Note 6.1
-   Pourquoi : attention, ça finit à 23:10, tu aimes les films, format facile à suivre.
+2. Beverly Hills — Joyeux anniversaire — TF1 Séries Films, 19:00, 1 h.  Note 5.1
+   Pourquoi : attention, ça finit à 20:00, tu aimes les séries.
 
-3. Le Hobbit : la désolation de Smaug — TFX, 21:10, 2 h 45.  Note 5.9
-   Pourquoi : attention, ça finit à 23:55, tu aimes les films.
+3. Demain nous appartient — TF1, 19:10, 0 h 45.  Note 5.1
+   Pourquoi : attention, ça finit à 19:55, tu aimes les séries.
 
-Juste derrière : Dr Death — Premiers soupçons (TF1 Séries Films, 5.1) · New York Unité Spéciale — L'arbre à trophées (TF1, 5.1)
+Juste derrière : Traces (TMC, 5.1) · 9-1-1 — Histoire de famille (6ter, 5.1)
 
-Écartés avant classement : 36 programme(s). La liste est dans le log.
+Écartés avant classement : 39 programme(s). La liste est dans le log.
 
 Réponds « 1 », « 2 », « 3 » ou « aucun » pour affiner les prochains classements.
